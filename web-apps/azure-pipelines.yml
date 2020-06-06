@@ -1,0 +1,45 @@
+trigger:
+- master
+
+variables:
+- group: variable-group-commit
+- name: imageName
+  value: 'windows-2019'
+- name: buildConfiguration
+  value: 'Release'
+- name: projects
+  value: '**/WebApplication.csproj'
+- name: testProjects
+  value: '**/WebApplication.Tests.csproj'
+- name: dotnetSdkVersion
+  value: '3.1.x'
+- name: azureSubscription
+  value: 'azure'
+- name: webAppsType
+  value: 'webApp'
+- name: environment
+  value: 'Commit-Stage'
+
+stages:
+- stage: Build
+  jobs:
+  - template: pipelines/build-pipelines.yml
+    parameters:
+      imageName: $(imageName)
+      buildConfiguration: $(buildConfiguration)
+      projects: $(projects)
+      testProjects: $(testProjects)
+      dotnetSdkVersion: $(dotnetSdkVersion)
+    
+- stage: Release
+  dependsOn:
+  - Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - template: pipelines/release-pipelines.yml
+    parameters:
+      imageName: $(imageName)
+      azureSubscription: $(azureSubscription)
+      webAppsName: $(webAppsName)
+      webAppsType: $(webAppsType)
+      environment: $(environment)

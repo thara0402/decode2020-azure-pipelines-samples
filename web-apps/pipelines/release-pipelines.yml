@@ -1,0 +1,28 @@
+parameters:
+  imageName: ''
+  azureSubscription: ''
+  webAppsName: ''
+  webAppsType: ''
+  webAppsSlotName: 'production'
+  environment: ''
+
+jobs:
+- deployment: Deploy_Azure_WebApps
+  displayName: 'Release'
+  pool:
+    vmImage: ${{parameters.imageName}}
+  environment: ${{parameters.environment}}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureWebApp@1
+          displayName: 'Deploy to Azure Web Apps'
+          inputs:
+            azureSubscription: ${{parameters.azureSubscription}}
+            appType: ${{parameters.webAppsType}}
+            appName: ${{parameters.webAppsName}}
+            slotName: ${{parameters.webAppsSlotName}}
+            package: '$(Pipeline.Workspace)/webapp/*.zip'
+            deploymentMethod: runFromPackage
+

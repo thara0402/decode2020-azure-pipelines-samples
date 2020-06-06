@@ -1,0 +1,28 @@
+parameters:
+  imageName: ''
+  azureSubscription: ''
+  functionAppsName: ''
+  functionAppsType: ''
+  functionAppsSlotName: 'production'
+  environment: ''
+
+jobs:
+- deployment: Deploy_Azure_Functions
+  displayName: 'Release'
+  pool:
+    vmImage: ${{parameters.imageName}}
+  environment: ${{parameters.environment}}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureFunctionApp@1
+          displayName: 'Deploy to Azure Functions'
+          inputs:
+            azureSubscription: ${{parameters.azureSubscription}}
+            appType: ${{parameters.functionAppsType}}
+            appName: ${{parameters.functionAppsName}}
+            slotName: ${{parameters.functionAppsSlotName}}
+            package: '$(Pipeline.Workspace)/functionApp/*.zip'
+            deploymentMethod: runFromPackage
+

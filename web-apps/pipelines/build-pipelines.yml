@@ -1,0 +1,39 @@
+parameters:
+  imageName: ''
+  buildConfiguration: ''
+  projects: ''
+  testProjects: ''
+  dotnetSdkVersion: ''
+
+jobs:
+- job: Build
+  pool:
+    vmImage: ${{parameters.imageName}}
+  steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'Install .NET Core SDK $(dotnetSdkVersion)'
+    inputs:
+      packageType: 'sdk'
+      version: $(dotnetSdkVersion)
+  - task: DotNetCoreCLI@2
+    displayName: 'Build'
+    inputs:
+      command: 'build'
+      projects: ${{parameters.projects}}
+      arguments: '--configuration ${{parameters.buildConfiguration}}'
+  - task: DotNetCoreCLI@2
+    displayName: 'Test'
+    inputs:
+      command: 'test'
+      projects: ${{parameters.testProjects}}
+      arguments: '--configuration ${{parameters.buildConfiguration}}'
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish'
+    inputs:
+      command: 'publish'
+      publishWebProjects: true
+      arguments: '--configuration ${{parameters.buildConfiguration}} --output $(System.DefaultWorkingDirectory)/publish'
+      zipAfterPublish: true
+  - publish: publish
+    displayName: 'Publish artifact'
+    artifact: webapp

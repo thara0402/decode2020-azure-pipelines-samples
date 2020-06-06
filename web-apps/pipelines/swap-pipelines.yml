@@ -1,0 +1,27 @@
+parameters:
+  imageName: ''
+  azureSubscription: ''
+  webAppsName: ''
+  webAppsSlotName: ''
+  resourceGroupName: ''
+  environment: ''
+
+jobs:
+- deployment: Swap_Azure_WebApps
+  displayName: 'Swap'
+  pool:
+    vmImage: ${{parameters.imageName}}
+  environment: ${{parameters.environment}}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - download: none
+        - task: AzureAppServiceManage@0
+          displayName: 'Swap staging and production'
+          inputs:
+            azureSubscription: ${{parameters.azureSubscription}}
+            Action: 'Swap Slots'
+            WebAppName: ${{parameters.webAppsName}}
+            SourceSlot: ${{parameters.webAppsSlotName}}
+            ResourceGroupName: ${{parameters.resourceGroupName}}

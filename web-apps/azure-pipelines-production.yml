@@ -1,0 +1,62 @@
+trigger:
+- production
+
+variables:
+- group: variable-group-production
+- name: imageName
+  value: 'windows-2019'
+- name: buildConfiguration
+  value: 'Release'
+- name: projects
+  value: '**/WebApplication.csproj'
+- name: testProjects
+  value: '**/WebApplication.Tests.csproj'
+- name: dotnetSdkVersion
+  value: '3.1.x'
+- name: azureSubscription
+  value: 'azure'
+- name: webAppsType
+  value: 'webApp'
+- name: environment
+  value: 'Production-Stage'
+- name: webAppsSlotName
+  value: 'staging'
+
+stages:
+- stage: Build
+  jobs:
+  - template: pipelines/build-pipelines.yml
+    parameters:
+      imageName: $(imageName)
+      buildConfiguration: $(buildConfiguration)
+      projects: $(projects)
+      testProjects: $(testProjects)
+      dotnetSdkVersion: $(dotnetSdkVersion)
+
+- stage: StagingRelease
+  dependsOn:
+  - Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/production'))
+  jobs:
+  - template: pipelines/release-pipelines.yml
+    parameters:
+      imageName: $(imageName)
+      azureSubscription: $(azureSubscription)
+      webAppsName: $(webAppsName)
+      webAppsType: $(webAppsType)
+      environment: $(environment)
+      webAppsSlotName: $(webAppsSlotName)
+
+- stage: ProductionRelease
+  dependsOn:
+  - StagingRelease
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/production'))
+  jobs:
+  - template: pipelines/swap-pipelines.yml
+    parameters:
+      imageName: $(imageName)
+      azureSubscription: $(azureSubscription)
+      webAppsName: $(webAppsName)
+      environment: $(environment)
+      webAppsSlotName: $(webAppsSlotName)
+      resourceGroupName: $(resourceGroupName)
